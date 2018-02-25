@@ -1,30 +1,30 @@
-// Ejemplo de muestra de sensores de humedad y temperatura, luz y servos. 
+// Inverna Bot. An Arduino based greenhouse controller for sensing and controlled environment.
 // Written by Luchux
 
 /********************************************************************/
-// Incluímos las librerías 
+// libraries
 #include "DHT.h"
 #include <OneWire.h> 
 #include <DallasTemperature.h>
 /********************************************************************/
 
 /********************************************************************/
-// Definimos los pines del Arduino para cada sensor/emisor
+// defining some pins
 
-#define TIPO_SENSOR_THA DHT22   // DHT 22  (AM2302), AM2321
-#define SENSOR_THA 12     // Definimos el pin para el sensor DHT22 Temperatura-humedad Aire
-#define SENSOR_TIERRA 2
-#define SENSOR_LUZ 0
+#define TIPO_SENSOR_THA DHT22   // DHT22  (AM2302), AM2321
+#define SENSOR_THA 12     // pin for DHT22 Temperatura-humedad Aire
+#define SENSOR_TIERRA 2   // pin for ground sensor
+#define SENSOR_LUZ 0      // fotovoltaic sensor
 
-#define SONAR_DISPARADOR 8
+#define SONAR_DISPARADOR 8 //sonar (measuring plants growing height)
 #define SONAR_RECEPTOR 9
 /********************************************************************/
 
 /********************************************************************/
-// Inizializamos el sensor de Temperatura y Humedad  Aire.
+// Initializing DHT sensor
 DHT dht(SENSOR_THA, TIPO_SENSOR_THA);
 
-// Inizializamos el sensor de tierra
+// Intializing ground sensor
 OneWire oneWire(SENSOR_TIERRA); 
 DallasTemperature sensors(&oneWire);
 /********************************************************************/ 
@@ -35,37 +35,41 @@ float temperatura;
 int luz;
 long tiempo;
 
+class LuzSensor {
+  int pin;
+  int minRead; 
+  int maxRead; 
+}
+
 void setup() {
   Serial.begin(9600);
   
-  //Definimos los pines de tipo entrada o salida para el Sonar
+  //pinModes for sonar
   pinMode(SONAR_DISPARADOR, OUTPUT);
   pinMode(SONAR_RECEPTOR, INPUT);
   
-  // Iniciamos el Sensor DHT22 de humedad y temperatura del aire
+  // start dht sensor
   dht.begin();
   
-  // Iniciamos el Sensor de temperatura subterraneo
+  // start ground sensor
   sensors.begin(); 
 }
 
 void loop() {
-  // Esperamos un poquito antes de la mediciones
+  // showing in serial 
   Serial.println("=========================================");
   Serial.println("Nueva medición de datos...");
   delay(5000);
   
 
-  //Leemos la humedad
+  //reading humidity
   humedad = dht.readHumidity();
   
-  //leemos la temperatura
+  //reading temperature
   temperatura = dht.readTemperature();
   
-  //leemos la luz
-  luz=analogRead(SENSOR_LUZ);
   
-  //Mostramos valores en la consola
+  //showing values
   Serial.print("Humedad: ");
   Serial.print(humedad);
   Serial.println(" %\t");
@@ -74,17 +78,20 @@ void loop() {
   Serial.print(temperatura);
   Serial.println(" *C ");
 
-  //Temperatura subterranea
-  sensors.requestTemperatures(); // Send the command to get temperature readings 
+  //Reading underground temperature
+  sensors.requestTemperatures(); // leyendo la temperatura del sensor
   Serial.print("Temperatura Suelo: "); 
   Serial.println(sensors.getTempCByIndex(0));
   Serial.println();
 
+  //reading light
   int nivelDeLuz;
   int nivelDeLuzAjustado;
-  nivelDeLuz = analogRead(0);
-  nivelDeLuzAjustado = map(nivelDeLuz, 990, 1030, 0, 100); //el sensor con esta resistencia va entre 990, y 1030.
 
+  niveDeLuz=analogRead(SENSOR_LUZ);
+  nivelDeLuzAjustado = map(nivelDeLuz, 990, 1030, 0, 100); //el sensor con esta resistencia va entre 990, y 1030.
+  
+  //showing values
   Serial.print("Luz: ");
   Serial.print(nivelDeLuzAjustado);
   Serial.println(" [0-100]");
@@ -92,24 +99,20 @@ void loop() {
   /********************************************************************/
 
 
-
-  // SENSOR de DISTANCIA
-  // lanzamos un pequeño pulso para activar el sensor
+  // Sonar activity
+  
+  // sending pulse de 10useg
   digitalWrite(SONAR_DISPARADOR, HIGH);
   delayMicroseconds(10);
   digitalWrite(SONAR_DISPARADOR, LOW);
   
-  // medimos el pulso de respuesta
-  tiempo = (pulseIn(SONAR_RECEPTOR, HIGH)/2); // dividido por 2 por que es el 
-                                       // tiempo que el sonido tarda
-                                       // en ir y en volver
-  // ahora calcularemos la distancia en cm
-  // sabiendo que el espacio es igual a la velocidad por el tiempo
-  // y que la velocidad del sonido es de 343m/s y que el tiempo lo 
-  // tenemos en millonesimas de segundo
+  // reading pulse (divided by 2, distance goes + back)
+  tiempo = (pulseIn(SONAR_RECEPTOR, HIGH)/2); 
+
+  //transforming time into distance by sound speed
   distancia = float(tiempo * 0.0343);
   
-  // y lo mostramos por el puerto serie una vez por segundo
+  //showing
   Serial.print("Distancia: ");
   Serial.println(distancia);
   Serial.println();
