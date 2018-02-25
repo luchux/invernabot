@@ -39,7 +39,7 @@ class LuzSensor {
   int pin;
   int minRead; 
   int maxRead; 
-}
+};
 
 void setup() {
   Serial.begin(9600);
@@ -59,16 +59,14 @@ void loop() {
   // showing in serial 
   Serial.println("=========================================");
   Serial.println("Nueva medición de datos...");
-  delay(5000);
+  delay(1000);
   
-
   //reading humidity
   humedad = dht.readHumidity();
   
   //reading temperature
   temperatura = dht.readTemperature();
-  
-  
+   
   //showing values
   Serial.print("Humedad: ");
   Serial.print(humedad);
@@ -88,7 +86,7 @@ void loop() {
   int nivelDeLuz;
   int nivelDeLuzAjustado;
 
-  niveDeLuz=analogRead(SENSOR_LUZ);
+  nivelDeLuz=analogRead(SENSOR_LUZ);
   nivelDeLuzAjustado = map(nivelDeLuz, 990, 1030, 0, 100); //el sensor con esta resistencia va entre 990, y 1030.
   
   //showing values
@@ -97,8 +95,6 @@ void loop() {
   Serial.println(" [0-100]");
   
   /********************************************************************/
-
-
   // Sonar activity
   
   // sending pulse de 10useg
